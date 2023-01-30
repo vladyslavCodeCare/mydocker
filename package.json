@@ -1,0 +1,22 @@
+{
+  "name": "mydocker",
+  "version": "1.0.0",
+  "description": "docker test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/vladyslavCodeCare/mydocker.git"
+  },
+  "keywords": [
+    "d"
+  ],
+  "author": "me",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vladyslavCodeCare/mydocker/issues"
+  },
+  "homepage": "https://github.com/vladyslavCodeCare/mydocker#readme"
+}

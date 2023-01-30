@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  myapp:
+    build: ./myapp
+    container_name: myapp_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./myapp:/app
+      - ./app/node_modules
+    stdin_open: true
+    tty: true
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+  api:
+    build: ./api
+    container_name: api_backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./api:/app
+      - ./app/node_modules
+volumes:
+  db:
+    driver: local
