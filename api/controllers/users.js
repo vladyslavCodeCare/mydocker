@@ -1,29 +1,41 @@
-const Pool = require("pg").Pool;
-const pool = new Pool({
-  user: "postgres",
-  host: "db",
-  database: "db_name",
-  password: "postgres",
-  port: 5432,
-});
-
-const connectToDB = async () => {
-  try {
-    await pool.connect();
-    console.log("connecte to db");
-  } catch (err) {
-    console.log(err);
-  }
-};
-connectToDB();
+const pool = require("../services/db").pool;
 
 const getUsers = (request, response) => {
-  pool.query("SELECT * FROM users ORDER BY id ASC", (error, results) => {
-    if (error) {
-      throw error;
+  const { byName, byPhone } = request.query;
+  const searchQArray = [];
+
+  let searchQ = "";
+  let unnest = "";
+
+  if (byName) {
+    searchQArray.push(` users.name LIKE '${byName}%' `);
+  }
+  if (byPhone) {
+    unnest = ",unnest(users.phones) phone";
+    searchQArray.push(` phone LIKE '${byPhone}%' `);
+  }
+  if (searchQArray.length > 0) {
+    searchQ = ` WHERE ${searchQArray.join("AND")}`;
+  }
+  pool.query(
+    `
+    WITH o as (
+      SELECT id,round(cost::numeric) AS cost , name, user_id
+      FROM orders
+    )
+    SELECT users.id, users.name, users.phones, jsonb_agg(to_jsonb(o) - 'user_id') as orders, count(o)
+    FROM users
+    LEFT JOIN o ON (users.id = o.user_id)
+    ${unnest} ${searchQ}
+    GROUP BY users.id
+    ORDER BY users.name ASC`,
+    (error, results) => {
+      if (error) {
+        throw error;
+      }
+      response.status(200).json(results.rows);
     }
-    response.status(200).json(results.rows);
-  });
+  );
 };
 
 const getUserById = (request, response) => {
@@ -38,12 +50,11 @@ const getUserById = (request, response) => {
 };
 
 const createUser = (request, response) => {
-  console.log("request----", request.body);
-  const { name, email } = request.body;
+  const { email, name, phones } = request.body;
 
   pool.query(
-    "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *",
-    [name, email],
+    "INSERT INTO users (name, email, phones) VALUES ($1, $2, $3) RETURNING *",
+    [name, email, phones],
     (error, results) => {
       if (error) {
         throw error;
